@@ -2,16 +2,26 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Mail, Lock, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
+  const router = useRouter()
+
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic
+
+    // Fake login do przeklikania
+    if (!email || !password) {
+      alert("Please enter email and password.")
+      return
+    }
+
+    router.push("/shelf")
   }
 
   return (
@@ -62,7 +72,10 @@ export default function LoginPage() {
               <label htmlFor="password" className="text-sm font-medium text-foreground">
                 Password
               </label>
-              <Link href="#" className="text-sm font-medium text-accent hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-accent hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>
@@ -108,6 +121,7 @@ export default function LoginPage() {
         {/* Google Sign In */}
         <button
           type="button"
+          onClick={() => router.push("/shelf")}
           className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-card py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -135,7 +149,7 @@ export default function LoginPage() {
         <div className="mt-6 border-t border-border pt-6 text-center">
           <p className="text-sm text-muted-foreground">
             {"Don't have a shelf yet? "}
-            <Link href="#" className="font-medium text-accent hover:underline">
+            <Link href="/register" className="font-medium text-accent hover:underline">
               Register here
             </Link>
           </p>
