@@ -1,20 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Image from "next/image"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { BookCard } from "@/components/books/book-card"
 import { cn } from "@/lib/utils"
-import { 
-  BookOpen, 
-  Bookmark, 
-  CheckCircle2, 
-  Star, 
-  Upload, 
+import {
+  BookOpen,
+  Bookmark,
+  CheckCircle2,
+  Star,
+  Upload,
   Plus,
   Library,
-  Search
+  Search,
 } from "lucide-react"
 
 const sidebarItems = [
@@ -32,6 +32,8 @@ const shelfBooks = [
     author: "Evelyn Reed",
     coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&q=80",
     genre: "Non-Fiction",
+    status: "Reading Now",
+    favorite: true,
     progress: { percentage: 64, currentPage: 182, totalPages: 284 },
   },
   {
@@ -40,6 +42,8 @@ const shelfBooks = [
     author: "Marcus Aurelius",
     coverImage: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300&q=80",
     genre: "Philosophy",
+    status: "Want to Read",
+    favorite: false,
     progress: { percentage: 22, currentPage: 45, totalPages: 210 },
   },
   {
@@ -48,6 +52,8 @@ const shelfBooks = [
     author: "Sarah Jenkins",
     coverImage: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&q=80",
     genre: "Fiction",
+    status: "Finished",
+    favorite: true,
     progress: { percentage: 89, currentPage: 312, totalPages: 350 },
   },
   {
@@ -56,17 +62,67 @@ const shelfBooks = [
     author: "Dr. Aris Thorne",
     coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&q=80",
     genre: "Science",
+    status: "Reading Now",
+    favorite: false,
     progress: { percentage: 5, currentPage: 20, totalPages: 415 },
   },
 ]
 
+function getShelfDescription(filter: string) {
+  switch (filter) {
+    case "Reading Now":
+      return "Books you are currently reading."
+    case "Want to Read":
+      return "Titles saved for later."
+    case "Finished":
+      return "Books you have already completed."
+    case "Favorites":
+      return "Your most valued titles."
+    default:
+      return "Your complete shelf collection."
+  }
+}
+
 export default function ShelfPage() {
   const [activeFilter, setActiveFilter] = useState("Reading Now")
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const filteredBooks = useMemo(() => {
+    let books = [...shelfBooks]
+
+    if (activeFilter !== "All Books") {
+      if (activeFilter === "Favorites") {
+        books = books.filter((book) => book.favorite)
+      } else {
+        books = books.filter((book) => book.status === activeFilter)
+      }
+    }
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase()
+      books = books.filter(
+        (book) =>
+          book.title.toLowerCase().includes(term) ||
+          book.author.toLowerCase().includes(term) ||
+          book.genre.toLowerCase().includes(term)
+      )
+    }
+
+    return books
+  }, [activeFilter, searchTerm])
+
+  const handleAddBook = () => {
+    alert("Add New Book is not connected to a database yet.")
+  }
+
+  const handleImportBook = () => {
+    alert("Import is not implemented yet. This is a click-through prototype.")
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      
+
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-8 lg:flex-row">
@@ -114,6 +170,7 @@ export default function ShelfPage() {
               {/* Add New Book Button */}
               <button
                 type="button"
+                onClick={handleAddBook}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
               >
                 <Plus className="h-4 w-4" />
@@ -128,11 +185,12 @@ export default function ShelfPage() {
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">{activeFilter}</h1>
                   <p className="text-sm text-muted-foreground">
-                    Currently immersed in these titles.
+                    {getShelfDescription(activeFilter)}
                   </p>
                 </div>
                 <button
                   type="button"
+                  onClick={handleImportBook}
                   className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                 >
                   <Upload className="h-4 w-4" />
@@ -140,33 +198,46 @@ export default function ShelfPage() {
                 </button>
               </div>
 
-              {/* Search Bar for Shelf */}
-              <div className="mb-6 hidden lg:block">
+              {/* Search Bar */}
+              <div className="mb-6">
                 <div className="relative max-w-md">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder="Search by title, author, or genre..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
 
               {/* Books Grid */}
-              <div className="grid gap-6 md:grid-cols-2">
-                {shelfBooks.map((book) => (
-                  <BookCard
-                    key={book.id}
-                    id={book.id}
-                    title={book.title}
-                    author={book.author}
-                    coverImage={book.coverImage}
-                    genre={book.genre}
-                    progress={book.progress}
-                    variant="shelf"
-                  />
-                ))}
-              </div>
+              {filteredBooks.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2">
+                  {filteredBooks.map((book) => (
+                    <BookCard
+                      key={book.id}
+                      id={book.id}
+                      title={book.title}
+                      author={book.author}
+                      coverImage={book.coverImage}
+                      genre={book.genre}
+                      progress={book.progress}
+                      variant="shelf"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-border bg-card p-8 text-center">
+                  <h2 className="mb-2 text-lg font-semibold text-foreground">
+                    No books found
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Try changing the filter or search phrase.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
